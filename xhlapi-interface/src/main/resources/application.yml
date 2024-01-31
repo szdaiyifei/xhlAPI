@@ -1,0 +1,9 @@
+server:
+  port: 8123
+  servlet:
+    context-path: /api
+xhl:
+  client:
+    access-key: xhl
+    secret-key: abcdefgh
+

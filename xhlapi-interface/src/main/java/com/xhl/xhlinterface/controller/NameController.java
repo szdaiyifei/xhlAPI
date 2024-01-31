@@ -44,7 +44,7 @@ public class NameController {
         if (!sign.equals(genSign)) {
             throw new RuntimeException("签名错误");
         }
-
-        return "Post 你的名字是:" + user.getUserName();
+        String result = "Post 你的名字是:" + user.getUserName();
+        return result;
     }
 }

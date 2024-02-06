@@ -19,6 +19,8 @@ import static com.xhl.xhlapiclientsdk.utils.SignUtils.genSign;
  * @date 2024/1/26
  */
 public class XhlClient {
+    private static final String GATEWAY_HOST = "http://localhost:8090";
+
     private String accessKey;
 
     private String secretKey;
@@ -32,7 +34,7 @@ public class XhlClient {
         // 可以单独传入http参数，这样参数会自动做URL编码，拼接在URL中
         HashMap<String, Object> paramMap = new HashMap<>();
         paramMap.put("name", name);
-        String result = HttpUtil.get("http://localhost:8123/api/name/get", paramMap);
+        String result = HttpUtil.get(GATEWAY_HOST + "/api/name/get", paramMap);
         System.out.println(result);
         return result;
     }
@@ -41,7 +43,7 @@ public class XhlClient {
         // 可以单独传入http参数，这样参数会自动做URL编码，拼接在URL中
         HashMap<String, Object> paramMap = new HashMap<>();
         paramMap.put("name", name);
-        String result= HttpUtil.post("http://localhost:8123/api/name/post", paramMap);
+        String result = HttpUtil.post(GATEWAY_HOST + "/api/name/post", paramMap);
         System.out.println(result);
         return result;
     }
@@ -60,7 +62,7 @@ public class XhlClient {
 
     public String getUserNameByPost(User user) {
         String json = JSONUtil.toJsonStr(user);
-        HttpResponse httpResponse = HttpRequest.post("http://localhost:8123/api/name/user")
+        HttpResponse httpResponse = HttpRequest.post(GATEWAY_HOST + "/api/name/user")
                 .addHeaders(getHeaderMap(json))
                 .body(json)
                 .execute();
@@ -69,7 +71,6 @@ public class XhlClient {
         System.out.println(result);
         return result;
     }
-
 
 
 }

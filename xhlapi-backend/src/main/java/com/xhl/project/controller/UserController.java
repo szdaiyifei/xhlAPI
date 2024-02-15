@@ -9,7 +9,7 @@ import com.xhl.project.common.ErrorCode;
 import com.xhl.project.common.ResultUtils;
 import com.xhl.project.exception.BusinessException;
 import com.xhl.project.model.dto.user.*;
-import com.xhl.project.model.entity.User;
+import com.xhl.xhlapicommon.model.entity.User;
 import com.xhl.project.model.vo.UserVO;
 import com.xhl.project.service.UserService;
 import org.apache.commons.lang3.StringUtils;

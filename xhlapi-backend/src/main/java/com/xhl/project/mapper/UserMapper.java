@@ -1,7 +1,7 @@
 package com.xhl.project.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.xhl.project.model.entity.User;
+import com.xhl.xhlapicommon.model.entity.User;
 
 /**
  * @Entity com.xhl.project.model.domain.User

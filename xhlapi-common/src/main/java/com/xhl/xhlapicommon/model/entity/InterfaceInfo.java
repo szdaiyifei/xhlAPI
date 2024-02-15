@@ -1,4 +1,4 @@
-package com.xhl.project.model.entity;
+package com.xhl.xhlapicommon.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;

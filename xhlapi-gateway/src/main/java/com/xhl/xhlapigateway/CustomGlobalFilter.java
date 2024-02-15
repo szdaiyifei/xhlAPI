@@ -1,7 +1,13 @@
 package com.xhl.xhlapigateway;
 
 import com.xhl.xhlapiclientsdk.utils.SignUtils;
+import com.xhl.xhlapicommon.model.entity.InterfaceInfo;
+import com.xhl.xhlapicommon.model.entity.User;
+import com.xhl.xhlapicommon.service.InnerInterfaceInfoService;
+import com.xhl.xhlapicommon.service.InnerUserInterfaceInfoService;
+import com.xhl.xhlapicommon.service.InnerUserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.reactivestreams.Publisher;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -34,14 +40,27 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
     private static final List<String> IP_WHIT_LIST = Arrays.asList("127.0.0.1");
 
+    private static final String INTERFACE_HOST = "http://localhost:8123";
+
+    @DubboReference
+    private InnerUserService innerUserService;
+
+    @DubboReference
+    private InnerUserInterfaceInfoService innerUserInterfaceInfoService;
+
+    @DubboReference
+    private InnerInterfaceInfoService innerInterfaceInfoService;
+
     /**
      * 处理响应
      *
      * @param exchange
      * @param chain
+     * @param interfaceInfoId
+     * @param invokerUserId
      * @return
      */
-    public Mono<Void> handleResponse(ServerWebExchange exchange, GatewayFilterChain chain) {
+    public Mono<Void> handleResponse(ServerWebExchange exchange, GatewayFilterChain chain, Long interfaceInfoId, Long invokerUserId) {
         try {
             // 获取原始的响应对象
             ServerHttpResponse originalResponse = exchange.getResponse();
@@ -68,6 +87,11 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
                             // (这里就理解为它在拼接字符串,它把缓冲区的数据取出来，一点一点拼接好)
                             return super.writeWith(fluxBody.map(dataBuffer -> {
                                 // todo 调用成功，接口调用次数 + 1
+                                try {
+                                    innerUserInterfaceInfoService.invokeCount(interfaceInfoId, invokerUserId);
+                                } catch (Exception e) {
+                                    log.error("计数异常", e);
+                                }
 //                                if (response.getStatusCode() == HttpStatus.OK) {
 //
 //                                } else {
@@ -111,23 +135,25 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         //在此写业务逻辑即可
-//        2 请求日志
+        // 2 请求日志
         ServerHttpRequest request = exchange.getRequest();
+        String path = INTERFACE_HOST + request.getPath().value();
+        String method = request.getMethod().toString();
         log.info("请求唯一表示" + request.getId());
-        log.info("请求路径" + request.getPath().value());
-        log.info("请求方法" + request.getMethod());
+        log.info("请求路径" + path);
+        log.info("请求方法" + method);
         log.info("请求参数" + request.getQueryParams());
         log.info("请求来源地址" + request.getRemoteAddress());
         String hostName = request.getRemoteAddress().getHostName();
 
-//        3 （黑白名单）
+        //3 （黑白名单）
         ServerHttpResponse response = exchange.getResponse();
         if (!IP_WHIT_LIST.contains(hostName)) {
             response.setStatusCode(HttpStatus.FORBIDDEN);
             return response.setComplete();
         }
 
-//        4 用户鉴权（判断 ak、sk 是否合法）
+        //        4 用户鉴权（判断 ak、sk 是否合法）
         // 从请求头中获取参数
         HttpHeaders headers = request.getHeaders();
         String accessKey = headers.getFirst("accessKey");
@@ -136,16 +162,24 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         String sign = headers.getFirst("sign");
         String body = headers.getFirst("body");
 
-// todo 实际情况应该是去数据库中查是否已分配给用户
-        if (!accessKey.equals("xhl")) {
+        // todo 实际情况应该是去数据库中查是否已分配给用户
+        User invokerUser = null;
+        try {
+            invokerUser = innerUserService.getInvokeUser(accessKey);
+        } catch (Exception e) {
+            log.error("获取用户信息失败" + e);
+        }
+
+        if (invokerUser == null) {
+            //如果用户信息为空 处理未授权
             return handleNoAuth(response);
         }
-// 直接校验如果随机数大于1万，则抛出异常，并提示"无权限"
+        // 直接校验如果随机数大于1万，则抛出异常，并提示"无权限"
         if (Long.parseLong(nonce) > 10000) {
             return handleNoAuth(response);
         }
 
-// 时间和当前时间不能超过5分钟
+        // 时间和当前时间不能超过5分钟
         Long currentTime = System.currentTimeMillis() / 1000;
         final Long FIVE_MINUTES = 60 * 5L;
         if ((currentTime - Long.parseLong(timestamp)) >= FIVE_MINUTES) {
@@ -153,19 +187,31 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
             return handleNoAuth(response);
         }
 
-// todo 实际情况中是从数据库中查出 secretKey
-        String serverSign = SignUtils.genSign(body, "abcdefgh");
-// 如果生成的签名不一致，则抛出异常，并提示"无权限"
-        if (!sign.equals(serverSign)) {
+        // todo 实际情况中是从数据库中查出 secretKey
+        String secretKey = invokerUser.getSecretKey();
+        String serverSign = SignUtils.genSign(body, secretKey);
+        // 如果生成的签名不一致，则抛出异常，并提示"无权限"
+        if (sign == null || !sign.equals(serverSign)) {
             return handleNoAuth(response);
         }
-//        5 请求的模拟接口是否存在？
+        //        5 请求的模拟接口是否存在？
         // todo 从数据库中去查询接口是否存在，可以用RPC
+        InterfaceInfo interfaceInfo = null;
+        try {
+            interfaceInfo = innerInterfaceInfoService.getInterfaceInfo(path, method);
+        } catch (Exception e) {
+            log.error("获取接口信息失败" + e);
+        }
 
+        if (interfaceInfo == null) {
+            //如果接口信息为空 处理未授权
+            return handleNoAuth(response);
+        }
+        // todo 是否有调用次数
 //        6 请求转发，调用模拟接口
-        Mono<Void> filter = chain.filter(exchange);
+//        Mono<Void> filter = chain.filter(exchange);
 //        7 响应日志
-        return handleResponse(exchange, chain);
+        return handleResponse(exchange, chain, interfaceInfo.getId(), invokerUser.getId());
 
     }
 

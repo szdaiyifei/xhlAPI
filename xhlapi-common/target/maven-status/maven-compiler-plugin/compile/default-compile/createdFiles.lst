@@ -1,0 +1,12 @@
+com\xhl\xhlapicommon\model\entity\User.class
+com\xhl\xhlapicommon\model\entity\InterfaceInfo.class
+com\xhl\xhlapicommon\model\entity\Post.class
+com\xhl\xhlapicommon\service\InnerUserInterfaceInfoService.class
+com\xhl\xhlapicommon\model\vo\UserVO.class
+com\xhl\xhlapicommon\service\InnerInterfaceInfoService.class
+com\xhl\xhlapicommon\model\vo\PostVO.class
+com\xhl\xhlapicommon\service\InnerUserService.class
+com\xhl\xhlapicommon\model\enums\PostReviewStatusEnum.class
+com\xhl\xhlapicommon\model\entity\UserInterfaceInfo.class
+com\xhl\xhlapicommon\model\enums\InterfaceInfoStatusEnum.class
+com\xhl\xhlapicommon\model\enums\PostGenderEnum.class

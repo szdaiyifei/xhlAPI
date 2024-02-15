@@ -1,6 +1,6 @@
 package com.xhl.project.service;
 
-import com.xhl.project.model.entity.User;
+import com.xhl.xhlapicommon.model.entity.User;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

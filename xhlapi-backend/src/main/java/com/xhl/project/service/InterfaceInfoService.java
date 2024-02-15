@@ -1,7 +1,7 @@
 package com.xhl.project.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.xhl.project.model.entity.InterfaceInfo;
+import com.xhl.xhlapicommon.model.entity.InterfaceInfo;
 
 /**
  * @author szdaiyifei

@@ -1,8 +1,7 @@
 package com.xhl.project.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.xhl.project.model.entity.UserInterfaceInfo;
-
+import com.xhl.xhlapicommon.model.entity.UserInterfaceInfo;
 /**
  * @author szdaiyifei
  * @description 针对表【user_interface_info(用户调用接口关系)】的数据库操作Service

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xhl.project.common.ErrorCode;
 import com.xhl.project.exception.BusinessException;
-import com.xhl.project.model.entity.UserInterfaceInfo;
+import com.xhl.xhlapicommon.model.entity.UserInterfaceInfo;
 import com.xhl.project.service.UserInterfaceInfoService;
 import com.xhl.project.mapper.UserInterfaceInfoMapper;
 import org.apache.commons.lang3.StringUtils;

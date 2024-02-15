@@ -16,6 +16,13 @@
     </properties>
     <dependencies>
 
+
+        <dependency>
+            <groupId>com.xhl</groupId>
+            <artifactId>xhlapi-common</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.dubbo</groupId>
             <artifactId>dubbo</artifactId>

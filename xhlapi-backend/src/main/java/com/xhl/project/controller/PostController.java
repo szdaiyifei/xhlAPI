@@ -13,7 +13,7 @@ import com.xhl.project.model.dto.post.PostAddRequest;
 import com.xhl.project.model.dto.post.PostQueryRequest;
 import com.xhl.project.model.dto.post.PostUpdateRequest;
 import com.xhl.project.model.entity.Post;
-import com.xhl.project.model.entity.User;
+import com.xhl.xhlapicommon.model.entity.User;
 import com.xhl.project.service.PostService;
 import com.xhl.project.service.UserService;
 import lombok.extern.slf4j.Slf4j;

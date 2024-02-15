@@ -1,6 +1,6 @@
 package com.xhl.project.mapper;
 
-import com.xhl.project.model.entity.UserInterfaceInfo;
+import com.xhl.xhlapicommon.model.entity.UserInterfaceInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

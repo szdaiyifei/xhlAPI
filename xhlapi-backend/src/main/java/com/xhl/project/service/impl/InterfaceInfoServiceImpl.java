@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xhl.project.common.ErrorCode;
 import com.xhl.project.exception.BusinessException;
 import com.xhl.project.mapper.InterfaceInfoMapper;
-import com.xhl.project.model.entity.InterfaceInfo;
+import com.xhl.xhlapicommon.model.entity.InterfaceInfo;
 import com.xhl.project.service.InterfaceInfoService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;

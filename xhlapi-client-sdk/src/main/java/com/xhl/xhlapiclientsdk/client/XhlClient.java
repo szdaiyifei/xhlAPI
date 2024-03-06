@@ -50,6 +50,7 @@ public class XhlClient {
 
     private Map<String, String> getHeaderMap(String body) {
         Map<String, String> hashMap = new HashMap<>();
+        // API 签名需要添加的参数
         hashMap.put("accessKey", accessKey);
         // 一定不能直接发送
         // hashMap.put("secretKey", secretKey);

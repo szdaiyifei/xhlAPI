@@ -24,6 +24,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 
 /**
@@ -184,9 +186,16 @@ public class InterfaceInfoController {
         return ResultUtils.success(result);
     }
 
+    /**
+     * 调用真实接口
+     *
+     * @param interfaceInfoInvokeRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/invoke")
     public BaseResponse<Object> invokeInterfaceInfo(@RequestBody InterfaceInfoInvokeRequest interfaceInfoInvokeRequest,
-                                                     HttpServletRequest request) {
+                                                    HttpServletRequest request) {
         if (interfaceInfoInvokeRequest == null || interfaceInfoInvokeRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -199,11 +208,14 @@ public class InterfaceInfoController {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
 
-
         // 检查接口状态是否为下线状态
         if (oldInterfaceInfo.getStatus() == InterfaceInfoStatusEnum.OFFLINE.getValue()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口已关闭");
         }
+
+        // 可以用反射去动态选择方法
+        String methodName = oldInterfaceInfo.getName();
+        System.out.println("方法名为：" + methodName);
 
         User loginUser = userService.getLoginUser(request);
         String accessKey = loginUser.getAccessKey();
@@ -212,8 +224,18 @@ public class InterfaceInfoController {
 
         Gson gson = new Gson();
         com.xhl.xhlapiclientsdk.model.User user = gson.fromJson(userRequestParams, com.xhl.xhlapiclientsdk.model.User.class);
-        String userName = tempClient.getUserNameByPost(user);
-        return ResultUtils.success(userName);
+        try {
+            // 获取methodName指定的方法
+            Method method = tempClient.getClass().getMethod(methodName, com.xhl.xhlapiclientsdk.model.User.class);
+            // 调用方法
+            Object result = method.invoke(tempClient, user);
+            System.out.println("结果是：" + result.toString());
+            return ResultUtils.success(result.toString());
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "方法名不正确或方法不存在");
+        }
+//        String userName = tempClient.getUserNameByPost(user);
+//        return ResultUtils.success(userName);
 
     }
 

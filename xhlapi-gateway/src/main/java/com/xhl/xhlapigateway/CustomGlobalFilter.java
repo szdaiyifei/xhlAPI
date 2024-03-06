@@ -38,7 +38,7 @@ import java.util.List;
 @Component
 public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
-    private static final List<String> IP_WHIT_LIST = Arrays.asList("127.0.0.1");
+    private static final List<String> IP_WHIT_LIST = Arrays.asList("127.0.0.1", "localhost");
 
     private static final String INTERFACE_HOST = "http://localhost:8123";
 
@@ -86,17 +86,12 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
                             // 返回一个处理后的响应体
                             // (这里就理解为它在拼接字符串,它把缓冲区的数据取出来，一点一点拼接好)
                             return super.writeWith(fluxBody.map(dataBuffer -> {
-                                // todo 调用成功，接口调用次数 + 1
+                                // 调用成功，接口调用次数 + 1
                                 try {
                                     innerUserInterfaceInfoService.invokeCount(interfaceInfoId, invokerUserId);
                                 } catch (Exception e) {
                                     log.error("计数异常", e);
                                 }
-//                                if (response.getStatusCode() == HttpStatus.OK) {
-//
-//                                } else {
-//                                    return handleInvokeError(response);
-//                                }
                                 // 读取响应体的内容并转换为字节数组
                                 byte[] content = new byte[dataBuffer.readableByteCount()];
                                 dataBuffer.read(content);
@@ -110,6 +105,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
                                 sb2.append(data);
                                 //打印日志
                                 log.info("响应结果:" + data);
+                                log.info(String.valueOf(sb2));
                                 // 将处理后的内容重新包装成DataBuffer并返回
                                 return bufferFactory.wrap(content);
                             }));
@@ -146,14 +142,14 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         log.info("请求来源地址" + request.getRemoteAddress());
         String hostName = request.getRemoteAddress().getHostName();
 
-        //3 （黑白名单）
+        // 3（黑白名单）
         ServerHttpResponse response = exchange.getResponse();
         if (!IP_WHIT_LIST.contains(hostName)) {
             response.setStatusCode(HttpStatus.FORBIDDEN);
             return response.setComplete();
         }
 
-        //        4 用户鉴权（判断 ak、sk 是否合法）
+        // 4 用户鉴权（判断 ak、sk 是否合法）
         // 从请求头中获取参数
         HttpHeaders headers = request.getHeaders();
         String accessKey = headers.getFirst("accessKey");
@@ -162,7 +158,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         String sign = headers.getFirst("sign");
         String body = headers.getFirst("body");
 
-        // todo 实际情况应该是去数据库中查是否已分配给用户
+        // 去数据库中查是否已分配给用户
         User invokerUser = null;
         try {
             invokerUser = innerUserService.getInvokeUser(accessKey);
@@ -174,6 +170,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
             //如果用户信息为空 处理未授权
             return handleNoAuth(response);
         }
+
         // 直接校验如果随机数大于1万，则抛出异常，并提示"无权限"
         if (Long.parseLong(nonce) > 10000) {
             return handleNoAuth(response);
@@ -187,30 +184,31 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
             return handleNoAuth(response);
         }
 
-        // todo 实际情况中是从数据库中查出 secretKey
+        // 从数据库中查出 secretKey
         String secretKey = invokerUser.getSecretKey();
         String serverSign = SignUtils.genSign(body, secretKey);
         // 如果生成的签名不一致，则抛出异常，并提示"无权限"
         if (sign == null || !sign.equals(serverSign)) {
             return handleNoAuth(response);
         }
-        //        5 请求的模拟接口是否存在？
-        // todo 从数据库中去查询接口是否存在，可以用RPC
+        // 5 请求的模拟接口是否存在？
+        // 数据库中去查询接口是否存在，可以用RPC
         InterfaceInfo interfaceInfo = null;
         try {
             interfaceInfo = innerInterfaceInfoService.getInterfaceInfo(path, method);
         } catch (Exception e) {
             log.error("获取接口信息失败" + e);
+            return handleInvokeError(response);
         }
 
         if (interfaceInfo == null) {
             //如果接口信息为空 处理未授权
             return handleNoAuth(response);
         }
-        // todo 是否有调用次数
-//        6 请求转发，调用模拟接口
-//        Mono<Void> filter = chain.filter(exchange);
-//        7 响应日志
+        // todo 判断是否有调用次数
+        // 6 请求转发，调用模拟接口
+        // Mono<Void> filter = chain.filter(exchange);
+        // 7 响应日志
         return handleResponse(exchange, chain, interfaceInfo.getId(), invokerUser.getId());
 
     }
@@ -229,6 +227,5 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
         return response.setComplete();
     }
-
 
 }

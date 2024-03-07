@@ -1,5 +1,6 @@
 package com.xhl.project.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xhl.project.common.ErrorCode;
@@ -9,6 +10,7 @@ import com.xhl.project.service.UserInterfaceInfoService;
 import com.xhl.project.mapper.UserInterfaceInfoMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author szdaiyifei
@@ -39,17 +41,28 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
     }
 
     @Override
-    public boolean invokeCount(long interfaceInfoId, long userId) {
+    @Transactional
+    public synchronized boolean invokeCount(long interfaceInfoId, long userId) {
         if (interfaceInfoId <= 0 || userId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         UpdateWrapper<UserInterfaceInfo> updateWrapper = new UpdateWrapper<>();
-
         updateWrapper.eq("interfaceInfoId", interfaceInfoId);
         updateWrapper.eq("userId", userId);
         updateWrapper.setSql("leftNum = leftNum - 1,totalNum = totalNum + 1");
         return this.update(updateWrapper);
 
+    }
+
+
+    @Override
+    public Long getInvokeCount(long interfaceInfoId, long userId) {
+        QueryWrapper<UserInterfaceInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("interfaceInfoId", interfaceInfoId);
+        queryWrapper.eq("userId",userId);
+        UserInterfaceInfo userInterfaceInfo = this.getOne(queryWrapper);
+        long count = userInterfaceInfo.getLeftNum();
+        return count;
     }
 }
 

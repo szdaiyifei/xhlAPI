@@ -21,4 +21,5 @@ public class InnerUserInterfaceInfoServiceImpl implements InnerUserInterfaceInfo
         // 调用注入的 UserInterfaceInfoService 的 invokeCount 方法
         return userInterfaceInfoService.invokeCount(interfaceInfoId, userId);
     }
+
 }

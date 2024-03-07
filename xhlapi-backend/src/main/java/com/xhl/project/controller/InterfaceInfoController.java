@@ -225,7 +225,7 @@ public class InterfaceInfoController {
         Gson gson = new Gson();
         com.xhl.xhlapiclientsdk.model.User user = gson.fromJson(userRequestParams, com.xhl.xhlapiclientsdk.model.User.class);
         try {
-            // 获取methodName指定的方法
+            // 获取methodName  指定的方法
             Method method = tempClient.getClass().getMethod(methodName, com.xhl.xhlapiclientsdk.model.User.class);
             // 调用方法
             Object result = method.invoke(tempClient, user);
